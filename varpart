@@ -11,8 +11,8 @@ require(fields)
 require(raster)
 
 ##load matrices
-spp <- read.csv(file.choose(), header = T, row.names = 1, sep = ',')
-ll <- read.csv(file.choose(), header = T, row.names = 1, sep = ',')
+spp <- read.csv(file.choose(), header = T, row.names = 1, sep = ',') #spp = species-by-site matrix. See repository
+ll <- read.csv(file.choose(), header = T, row.names = 1, sep = ',') #ll = latlong-by-site matrix. See repository
 
 ##extract climatic data
 r <- getData("worldclim", var = "bio", res = 10)
@@ -23,7 +23,7 @@ uni <- apply(spp, 2, sum)
 spp <- spp[, which(uni > 1)]
 
 ##Hellinger transformation
-spp.hel <- decostand(spp, 'hel')#spp = species-by-site matrix
+spp.hel <- decostand(spp, 'hel')
 
 ##forward selection - environmental variables
 #env = environmental variables-by-site matrix
@@ -40,7 +40,7 @@ environment <- env[, match(env.labels, colnames(env))]
 vif.cca(rda(spp.hel, environment))
 
 ##generate PCNMs
-ll.dist <- rdist.earth(ll)#ll = latlong-by-site matrix
+ll.dist <- rdist.earth(ll)
 ll.pcnm <- pcnm(ll.dist)
 ll.scores <- as.data.frame(scores(ll.pcnm))
 
@@ -56,5 +56,5 @@ space <- ll.scores[, match(spatial.labels, colnames(ll.scores))]
 varpart(spp.hel, environment, space)
 
 ##test the significance of each fraction
-anova.cca(rda(spp.hel, space, environment))#spatial fraction
-anova.cca(rda(spp.hel, environment, space))#environmental fraction
+anova.cca(rda(spp.hel, space, environment)) #spatial fraction
+anova.cca(rda(spp.hel, environment, space)) #environmental fraction
