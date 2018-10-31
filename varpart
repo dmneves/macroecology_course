@@ -1,1 +1,60 @@
-#in prep
+###variation partitioning script
+
+##install packages
+install.packages('vegan')
+install.packages('fields')
+install.packages('raster')
+
+##libraries
+require(vegan)
+require(fields)
+require(raster)
+
+##load matrices
+spp <- read.csv(file.choose(), header = T, row.names = 1, sep = ',')
+ll <- read.csv(file.choose(), header = T, row.names = 1, sep = ',')
+
+##extract climatic data
+r <- getData("worldclim", var = "bio", res = 10)
+env <- extract(r, ll)
+
+##exclude unicates
+uni <- apply(spp, 2, sum)
+spp <- spp[, which(uni > 1)]
+
+##Hellinger transformation
+spp.hel <- decostand(spp, 'hel')#spp = species-by-site matrix
+
+##forward selection - environmental variables
+#env = environmental variables-by-site matrix
+env.mod0 <- rda(spp.hel ~ 1, env)
+env.mod1 <- rda(spp.hel ~ ., env)
+env.sel <- ordiR2step(env.mod0, scope = formula(env.mod1),
+	perm.max = 999, direction = "forward", trace = F)
+env.sel$anova #check forward selection results
+env.labels <- attr(env.sel$terms, "term.labels")
+environment <- env[, match(env.labels, colnames(env))]
+
+##progressive elimination of collinear variables based on VIF
+##maintaining only those with VIF < 4
+vif.cca(rda(spp.hel, environment))
+
+##generate PCNMs
+ll.dist <- rdist.earth(ll)#ll = latlong-by-site matrix
+ll.pcnm <- pcnm(ll.dist)
+ll.scores <- as.data.frame(scores(ll.pcnm))
+
+##forward selection - spatial variables
+spatial.mod0 <- rda(spp.hel ~ 1, ll.scores)
+spatial.mod1 <- rda(spp.hel ~ ., ll.scores)
+spatial.sel <- ordiR2step(spatial.mod0, scope = formula(spatial.mod1),
+	perm.max = 999, direction = "forward", trace = F)
+spatial.labels <- attr(spatial.sel$terms, "term.labels")
+space <- ll.scores[, match(spatial.labels, colnames(ll.scores))]
+
+##variation partitioning
+varpart(spp.hel, environment, space)
+
+##test the significance of each fraction
+anova.cca(rda(spp.hel, space, environment))#spatial fraction
+anova.cca(rda(spp.hel, environment, space))#environmental fraction
