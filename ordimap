@@ -9,6 +9,10 @@ require(maps)
 #load species-by-site matrix
 spp  <- read.table('spp.txt', header = T, row.names = 1, sep = '')
 
+#exclude unicates
+uni <- apply(spp, 2, sum)
+spp <- spp[, which(uni > 1)]
+
 #Helling transformation of spp-by-site matrix
 spp.hel <- decostand(spp, 'hel')
 
