@@ -5,7 +5,7 @@ install.packages('vegan')
 install.packages('fields')
 install.packages('raster')
 
-##libraries
+##load packages
 require(vegan)
 require(fields)
 require(raster)
@@ -58,3 +58,4 @@ varpart(spp.hel, environment, space)
 ##test the significance of each fraction
 anova.cca(rda(spp.hel, space, environment)) #spatial fraction
 anova.cca(rda(spp.hel, environment, space)) #environmental fraction
+
