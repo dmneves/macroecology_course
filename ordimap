@@ -1,3 +1,5 @@
+###Analyses of community composition
+
 #load packages
 require(vegan)
 require(recluster)
@@ -16,9 +18,11 @@ simdiss <- recluster.dist(spp.hel, dist = "simpson")
 #ordination analysis
 spp.ord <- metaMDS(simdiss, center = T)$points
 col <- as.data.frame(recluster.col(spp.ord))
+
+#extract colors for plots
 colnames(col) <- c('axis1', 'axis2', 'r', 'g', 'b')
 
-#plot ordination results
+##plot ordination results
 tiff("nmds.tiff", height = 15, width = 15, unit = "cm", res = 600)
 plot(spp.ord, col = rgb(col$r, col$g, col$b, maxColorValue = 255), pch = 16)
 
@@ -28,21 +32,23 @@ plot(fit, add = T, col = 'black')
 
 dev.off()
 
-#map
+##map
 ll  <- read.table('latlong.txt', header = T, row.names = 1, sep = '')
 
-latlong <- c(ll$Long10, ll$Lat10)
-
+#load Brazil's shapefile
 brasil <- shapefile('Brasil')
 
+#plot geographical delimitation
 map(xlim = c(min(ll$Long10), max(ll$Long10)),
 	ylim = c(min(ll$Lat10), max(ll$Lat10)), col = "white")
 
+#plot shapefile and points
 plot(brasil, border = 'gray', add = T)
 points(ll$Long10, ll$Lat10, col = rgb(col$r, col$g, col$b,
 	maxColorValue = 255), pch = 16)
 map.axes()
 
+#fit most explanatory environmental variable
 ordisurf(cbind(ll$Long10, ll$Lat10), environment$bio9, col = 'black', add = T)
 
 dev.off()
