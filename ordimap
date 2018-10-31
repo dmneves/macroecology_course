@@ -27,20 +27,19 @@ col <- as.data.frame(recluster.col(spp.ord))
 colnames(col) <- c('axis1', 'axis2', 'r', 'g', 'b')
 
 ##plot ordination results
-tiff("nmds.tiff", height = 15, width = 15, unit = "cm", res = 600)
+tiff("nmds_map.tiff", height = 15, width = 30, unit = "cm", res = 600)
+par(mfrow = c(1, 2))
 plot(spp.ord, col = rgb(col$r, col$g, col$b, maxColorValue = 255), pch = 16)
 
 #fit environmental vectors
 fit <- envfit(spp.ord, environment)
 plot(fit, add = T, col = 'black')
 
-dev.off()
-
 ##map
-ll  <- read.table('latlong.txt', header = T, row.names = 1, sep = '')
+#ll  <- read.table('latlong.txt', header = T, row.names = 1, sep = '')
 
 #load Brazil's shapefile
-brasil <- shapefile('Brasil')
+#brasil <- shapefile('Brasil')
 
 #plot geographical delimitation
 map(xlim = c(min(ll$Long10), max(ll$Long10)),
@@ -50,7 +49,7 @@ map(xlim = c(min(ll$Long10), max(ll$Long10)),
 plot(brasil, border = 'gray', add = T)
 points(ll$Long10, ll$Lat10, col = rgb(col$r, col$g, col$b,
 	maxColorValue = 255), pch = 16)
-map.axes()
+#map.axes()
 
 #fit most explanatory environmental variable
 ordisurf(cbind(ll$Long10, ll$Lat10), environment$bio9, col = 'black', add = T)
