@@ -1,1 +1,234 @@
-#in prep
+require(recluster)
+require(vegan)
+spp.hel <- decostand(spp, 'hel')
+simdiss <- recluster.dist(spp.hel, dist = "simpson")
+points <- metaMDS(simdiss, center = T)$points
+col <- recluster.col(points)
+
+tiff("tmp.tiff", height = 15, width = 30, unit = "cm", res = 250)
+par(mfrow = c(1, 2))
+recluster.plot.col(col, text = F)
+
+attach(mapping.rupestre)
+plot(1, type = "n", xlim = c(0, 1), ylim = c(0, 1))
+points(DCA1, DCA2, col = rgb(r, g, b, maxColorValue = 255), pch = 16,
+	cex = 0.5)
+
+dev.off()
+
+require(maps)
+require(raster)
+require(vegan)
+br <- shapefile("Brazil")
+tiff("map_legend.tiff", height = 15, width = 30, unit = "cm", res = 300)
+par(mfrow = c(1, 2))
+
+attach(mapping)
+map(xlim=c(-89.0933, -34.7992),ylim=c(-34.8567, 9.9428), col = "gray")
+map.axes()
+points(Long10, Lat10, col = rgb(r, g, b, maxColorValue = 255), cex = 0.5,
+	pch = 16)
+legend("bottomleft", cex = 0.8, bty = "n", c("Atlantic rain forest",
+	expression(italic("cerrado")*" woody savanna"),
+	expression(italic("chaco")*" thorn woodland"),
+	"lowland Amazonian rain forest", "sub-Andean Amazonian rain forest", 
+	"seasonally dry forest", "semi-arid thorn dry forest",
+	expression(italic("Pampa")*" woody prairie")), pch = 16,
+	col = c(rgb(af.col, maxColorValue = 255),
+	rgb(ce.col, maxColorValue = 255), rgb(ch.col, maxColorValue = 255),
+	rgb(am.col, maxColorValue = 255), rgb(an.col, maxColorValue = 255),
+	rgb(df.col, maxColorValue = 255), rgb(ca.col, maxColorValue = 255),
+	rgb(pa.col, maxColorValue = 255)))
+title("(a)")
+
+mapping.rupestre <- mapping[which(mapping$Domain == "campo rupestre"), ]
+attach(mapping.rupestre)
+map(xlim=c(-89.0933, -34.7992),ylim=c(-34.8567, 9.9428), col = "gray")
+map.axes()
+plot(brasil, add = T, lty = "dashed", border = "gray")
+points(Long10, Lat10, col = rgb(r, g, b, maxColorValue = 255), cex = 0.5,
+	pch = 16)
+
+legend("bottomleft", bty = "n", cex = 0.8,
+	c(expression("Amazonian "*italic("campo rupestre")),
+	expression("Atlantic "*italic("campo rupestre")), 
+	expression("seasonally dry "*italic("campo rupestre")),
+	expression("savanna-type ("*italic("cerrado")*") "*italic("campo rupestre"))),
+	pch = 16, col = c(rgb(am.col, maxColorValue = 255),
+	rgb(af.col, maxColorValue = 255), rgb(df.col, maxColorValue = 255),
+	rgb(ce.col, maxColorValue = 255)))
+title("(a) Rockiness(%)")
+latlong <- cbind(Long10, Lat10)
+ordisurf(latlong, environment$Rockiness, col = "black", main = "",
+	add = T, nlevels = 5)
+
+dev.off()
+
+af <- mapping[which(mapping$Domain_beta == "Atlantic Forest"), ]
+am <- mapping[which(mapping$Domain_beta == "Amazonia"), ]
+an <- mapping[which(mapping$Domain_beta == "Andean"), ]
+ca <- mapping[which(mapping$Domain_beta == "Caatinga"), ]
+ce <- mapping[which(mapping$Domain_beta == "Cerrado"), ]
+ch <- mapping[which(mapping$Domain_beta == "Gran Chaco"), ]
+df <- mapping[which(mapping$Domain_beta == "dry forest"), ]
+pa <- mapping[which(mapping$Domain_beta == "Pampa"), ]
+dim(pa)
+
+af.col <- apply(af[, 6:8], 2, mean)
+am.col <- apply(am[, 6:8], 2, mean)
+an.col <- apply(an[, 6:8], 2, mean)
+ca.col <- apply(ca[, 6:8], 2, mean)
+ce.col <- apply(ce[, 6:8], 2, mean)
+ch.col <- apply(ch[, 6:8], 2, mean)
+df.col <- apply(df[, 6:8], 2, mean)
+pa.col <- apply(pa[, 6:8], 2, mean)
+
+af.col <- tmp[1, ]
+am.col <- tmp[2, ]
+an.col <- tmp[3, ]
+ca.col <- tmp[4, ]
+ce.col <- tmp[5, ]
+ch.col <- tmp[6, ]
+df.col <- tmp[7, ]
+pa.col <- tmp[8, ]
+
+#ordisurf
+tiff("ordisurf.tiff", height = 30, width = 30, unit = "cm", res = 200)
+par(mfrow = c(2, 2))
+
+attach(mapping)
+map(xlim=c(-89.0933, -34.7992),ylim=c(-34.8567, 9.9428), col = "gray50")
+map.axes(cex.axis = 1.5)
+points(Long10, Lat10, col = rgb(r, g, b, maxColorValue = 255), pch = 16)
+plot(brasil, add = T, lty = "dashed")
+legend("bottomleft", bty = "n", c("Atlantic rain forest",
+	expression(italic("cerrado")*" woody savanna"),
+	expression(italic("chaco")*" thorn woodland"),
+	"lowland Amazonian rain forest", "sub-Andean Amazonian rain forest", 
+	"seasonally dry forest", "semi-arid thorn dry forest",
+	expression(italic("Pampa")*" woody prairie")), pch = 19,
+	col = c(rgb(af.col, maxColorValue = 255),
+	rgb(ce.col, maxColorValue = 255), rgb(ch.col, maxColorValue = 255),
+	rgb(am.col, maxColorValue = 255), rgb(an.col, maxColorValue = 255),
+	rgb(df.col, maxColorValue = 255), rgb(ca.col, maxColorValue = 255),
+	rgb(pa.col, maxColorValue = 255)))
+title("(a)", cex.main = 2)
+
+attach(mapping.rupestre)
+map(xlim=c(-63.6947, -34.7992),ylim=c(-21.7203, 1.9511), col = "gray50")
+map.axes(cex.axis = 1.5)
+plot(brasil, add = T, lty = "dashed", border = "gray50")
+points(Long10, Lat10, col = rgb(r, g, b, maxColorValue = 255), pch = 16)
+
+legend("topleft", bty = "n", cex = 1.5,
+	c(expression("Amazonian "*italic("campo rupestre")),
+	expression("Atlantic "*italic("campo rupestre")), 
+	expression("seasonally dry "*italic("campo rupestre")),
+	expression("savanna-type ("*italic("cerrado")*") "*italic("campo rupestre"))),
+	pch = 19, col = c(rgb(am.col, maxColorValue = 255),
+	rgb(af.col, maxColorValue = 255),
+	rgb(df.col, maxColorValue = 255),
+	rgb(ce.col, maxColorValue = 255)))
+title("(b) Rockiness (%)", cex.main = 2)
+latlong <- cbind(Long10, Lat10)
+ordisurf(latlong, environment$Rockiness, main = "", add = T, col = "black",
+	labcex = 1, nlevels = 5)
+
+map(xlim=c(-63.6947, -34.7992),ylim=c(-21.7203, 1.9511), col = "gray50")
+map.axes(cex.axis = 1.5)
+plot(brasil, add = T, lty = "dashed", border = "gray50")
+points(Long10, Lat10, col = rgb(r, g, b, maxColorValue = 255), pch = 16,
+	cex = 1.5)
+
+title("(c) Mean Annual Temperature (ºC)", cex.main = 2)
+ordisurf(latlong, environment$TempAnn, main = "", add = T, col = "black",
+	labcex = 1)
+
+map(xlim=c(-63.6947, -34.7992),ylim=c(-21.7203, 1.9511), col = "gray50")
+map.axes(cex.axis = 1.5)
+plot(brasil, add = T, lty = "dashed", border = "gray50")
+points(Long10, Lat10, col = rgb(r, g, b, maxColorValue = 255), pch = 16,
+	cex = 1.5)
+
+title("(d) Mean Annual Precipitation (mm)", cex.main = 2)
+ordisurf(latlong, environment$PrecAnn, main = "", add = T, col = "black",
+	labcex = 1, nlevels = 5)
+
+dev.off()
+
+sa <- shapefile('amer_sul')
+#plot new
+fit <- envfit(points, env[, c(4, 7, 22)])
+fit2 <- envfit(points, env2)
+plot(fit2, col = "black")
+
+attach(rupestre)
+tiff('nmds_UCs.tiff', height = 15, width = 15, unit = 'cm', res = 600)
+plot(points, col = c('black', 'red')[as.numeric(ucs$UC)], pch = 16,
+	xlab = 'NMDS1', ylab = 'NMDS2', cex.lab = 1.5, cex.axis = 1.5)
+ordisurf(points, env$PrecAnn, main = "", add = T,
+	col = "darkgray", labcex = 1,
+	levels = c(900, 1100, 1300, 1500, 1700, 1800))
+plot(fit, col = "black")
+title("(b)", cex.main = 1.5)
+legend('bottomright', c('unprotected', 'protected'),
+	pch = 16, col = c('red', 'black'), bty = 'n')
+
+dev.off()
+
+
+#nmds
+tiff('nmds_final.tiff', height = 15, width = 15, unit = 'cm', res = 600)
+plot(points, col = rgb(col[, 3], col[, 4], col[, 5],
+	maxColorValue = 255), pch = 16,
+	xlab = 'NMDS1', ylab = 'NMDS2', cex.lab = 1.5, cex.axis = 1.5)
+plot(fit, col = "black")
+title("(a)", cex.main = 1.5)
+
+dev.off()
+
+env2 <- read.csv('env.csv', header = T, row.names = 1, sep = ',')
+
+tiff('map final.tiff', height = 15, width = 15, unit = 'cm', res = 600)
+#attach(env)
+#latlong <- cbind(env2$Long10, env2$Lat10)
+
+map(xlim=c(-64, -34),ylim=c(-24, -5), col = 'white')
+map.axes(cex.axis = 1.5)
+#plot(alt, col = grey(100:1/100))
+plot(caatinga, add = T, border = 'grey80', col = 'gray80')
+plot(cerrado, add = T, border = 'grey70', col = 'gray70')
+plot(brasil, add = T, lty = "dashed", border = 'grey50')
+plot(sa, add = T, border = 'grey60')
+points(Long10, Lat10, col = rgb(col[, 3], col[, 4], col[, 5],
+	maxColorValue = 255), pch = 16)
+ordisurf(latlong, env2$PrecAnn, main = "", add = T,
+	col = 'black', labcex = 1,
+	levels = c(950, 1200, 1400, 1600, 1750, 2000))
+title("(b) Mean Annual Precipitation (mm)", cex.main = 1.5)
+
+dev.off()
+
+#UCs
+ucs <- read.csv('UCs.csv', header = T, row.names = 1, sep = ',')
+require(maps)
+require(raster)
+brasil <- shapefile('Brazil')
+sa <- shapefile('amer_sul')
+e <- c(-64, -34, -24, -5)
+#wdpa <- shapefile('wdpa_crop')
+wdpa <- crop(wdpa, e)
+
+tiff('UCs.tiff', height = 15, width = 15, unit = 'cm', res = 600)
+map(xlim=c(-64, -34),ylim=c(-24, -5), col = 'white')
+map.axes(cex.axis = 1.5)
+plot(wdpa, col = 'lightgray', border = 'lightgray', add = T)
+plot(brasil, add = T, lty = "dashed")
+plot(sa, add = T)
+points(ucs$Long10, ucs$Lat10, col = c('black', 'red')[as.numeric(ucs$UC)],
+	pch = 16)
+legend('bottomright', c('unprotected', 'protected'), pch = 16,
+	col = c('red', 'black'), bty = 'n')
+main <- title('(a)', cex.main = 1.5)
+dev.off()
+
