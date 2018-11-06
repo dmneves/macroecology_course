@@ -133,10 +133,10 @@ plot(pca_SA$li[,1:2])
 
 ##remover valores climaticos suspeitos
 #listar extremos de distribuição
-sort(pca_SA$li[,1])[1:10]
+sort(pca_SA$li[,2])[1:10]
 
 #ver identidade de valores suspeitos
-(to_remove <- which(pca_SA$li[,1] < -15))
+(to_remove <- which(pca_SA$li[,2] < -10))
 
 #remover valor suspeito e refazer PCA
 if(length(to_remove)){ ## remover outliers
@@ -159,7 +159,7 @@ s.class(pca_SA$li[,1:2],
 s.corcircle(pca_SA$co, clab = 1)
 
 ##escolher variaveis
-bioclim_SA_sub <- stack(subset(bioclim_SA, c("bio_11", "bio_15", "bio_19")))
+bioclim_SA_sub <- stack(subset(bioclim_SA, c("bio_3", "bio_15", "bio_17")))
 
 ##procedimento de modelagem no biomod2
 #formatar dados
