@@ -1,0 +1,355 @@
+#Modelagem de adequabilidade de habitat de Senna rizzinii H.S.Irwin & Barneby na America do Sul
+
+
+##carregar os pacotes necessarios
+if(!require(rgbif)){ ## instalar o pacote rgbif, caso necessario
+  install.packages("rgbif")
+  require(rgbif)
+}
+
+if(!require(biomod2)){ ## instalar o pacote biomod2, caso necessario
+  install.packages("biomod2")
+  require(biomod2)
+}
+
+if(!require(gridExtra)){ ## instalar o pacote gridExtra, caso necessario
+  install.packages("gridExtra")
+  require(gridExtra)
+}
+
+if(!require(rasterVis)){ ## instalar o pacote rasterVis, caso necessario
+  install.packages("rasterVis")
+  require(rasterVis)
+}
+
+if(!require(rgdal)){ ## instalar o pacote rgdal, caso necessario
+  install.packages("rgdal")
+  require(rgdal)
+}
+
+if(!require(ade4)){ ## instalar o pacote ade4, caso necessario
+  install.packages("ade4")
+  require(ade4)
+}
+
+##verificar se Senna rizzinii é referenciada no GBIF
+spp_Senna <- name_suggest(q='Senna rizzinii', rank='species',limit = 10000)
+
+(spp_Senna <- spp_Senna[ grepl("^Senna rizzinii", spp_Senna$canonicalName),])
+
+##baixar ocorrencias de Senna rizzinii
+data <- occ_search(taxonKey = spp_Senna$key, 
+                         country="BR", 
+                         fields = c('name','key','country','decimalLatitude','decimalLongitude'),  
+                         hasCoordinate=T , 
+                         limit=1000, 
+                         return = 'data')
+
+##trocar " " por "." no nome da especie
+data$name <- sub(" ", ".", data$name)
+
+(spp_to_model <- unique(data$name))
+
+##verificar numero total de ocorrencias
+sort(table(data$name), decreasing = T)
+
+##remover coordenadas espurias (e.g., X = 0 ou Y = 0)
+ids <- which(data$decimalLongitude==0 | data$decimalLatitude==0)
+
+data <- data[-ids,]
+
+##baixar variaveis ambientai do Worldclim
+dir.create("WorldClim_data", showWarnings = F)
+
+#bioclim atual
+download.file(url = "http://biogeo.ucdavis.edu/data/climate/worldclim/1_4/grid/cur/bio_10m_esri.zip", 
+              destfile = "WorldClim_data/current_bioclim_10min.zip", 
+              method = "auto")
+
+#GCM -> BCC-CSM1-1, ano -> 2050, RCP -> 4.5
+download.file(url = "http://biogeo.ucdavis.edu/data/climate/cmip5/10m/bc45bi50.zip", 
+              destfile = "WorldClim_data/2050_BC_45_bioclim_10min.zip", 
+              method = "auto")
+
+#GCM -> BCC-CSM1-1, ano -> 2080, RCP -> 4.5
+download.file(url = "http://biogeo.ucdavis.edu/data/climate/cmip5/10m/bc45bi70.zip", 
+              destfile = "WorldClim_data/2070_BC_45_bioclim_10min.zip", 
+              method = "auto")
+#carregar pacotes
+require(biomod2)
+require(gridExtra)
+require(rasterVis)
+require(rgdal)
+require(ade4)
+
+##descompactar arquivos climaticos
+unzip( zipfile = "WorldClim_data/current_bioclim_10min.zip", 
+       exdir = "WorldClim_data/current", 
+       overwrite = T)
+list.files("WorldClim_data/current/bio/")
+
+unzip( zipfile = "WorldClim_data/2050_BC_45_bioclim_10min.zip", 
+        exdir = "WorldClim_data/2050/BC_45",
+        overwrite = T)
+list.files("WorldClim_data/2050/BC_45/")
+
+unzip( zipfile = "WorldClim_data/2070_BC_45_bioclim_10min.zip",
+        exdir = "WorldClim_data/2070/BC_45",
+        overwrite = T)
+list.files("WorldClim_data/2070/BC_45/")
+
+##selecao de variaveis
+#extrair ocorrencias da tabela
+SenRiz_occ <- data[ data$name ==  "Senna.rizzinii", ]
+
+#agrupar variaveis climaticas
+bioclim_world <- stack(list.files("WorldClim_data/current/bio",
+                                  pattern ="bio_", full.names=T))
+
+#carregar mapa da America do Sul
+mask_south_america <- shapefile("South_America.shp")
+
+#recortar variaveis climaticas
+bioclim_SA <- mask(bioclim_world, mask_south_america)
+
+bioclim_SA <- crop(bioclim_SA, mask_south_america)
+
+##avaliar o espaco climatico de Senna rizzinii
+#extrair (das camadas climaticas) a identidade das celulas com ocorrencias
+SenRiz_cell_id <- cellFromXY(subset(bioclim_SA,1), 
+                             SenRiz_occ[,c("decimalLongitude", "decimalLatitude")])
+
+#omitir (das camadas climaticas) celulas com dados climaticos indisponiveis
+bioclim_SA_df <- na.omit(as.data.frame(bioclim_SA))
+
+#ver seis primeiras linhas da matriz de valores das camadas climaticas
+head(bioclim_SA_df)
+
+#rodar PCA
+pca_SA <- dudi.pca(bioclim_SA_df,scannf = F, nf = 2)
+
+#plotar PCA
+plot(pca_SA$li[,1:2])
+
+##remover valores climaticos suspeitos
+#listar extremos de distribuição
+sort(pca_SA$li[,1])[1:10]
+
+#ver identidade de valores suspeitos
+(to_remove <- which(pca_SA$li[,1] < -15))
+
+#remover valor suspeito e refazer PCA
+if(length(to_remove)){ ## remover outliers
+  bioclim_SA_df <- bioclim_SA_df[ - to_remove,]
+  pca_SA <- dudi.pca(bioclim_SA_df,scannf = F, nf = 2)  
+}
+
+#discriminar ocorrência de Senna rizzinii do espaço climatico da America do Sul 
+par(mfrow=c(1,2))
+s.class(pca_SA$li[,1:2],
+        fac= factor(rownames(bioclim_SA_df) %in% SenRiz_cell_id, 
+                    levels = c("FALSE", "TRUE" ),
+                    labels = c("", "")), 
+        col=c("red","blue"), 
+        csta = 0,
+        cellipse = 2,
+        cpoint = .3,
+        pch = 16)
+
+s.corcircle(pca_SA$co, clab = 1)
+
+##escolher variaveis
+bioclim_SA_sub <- stack(subset(bioclim_SA, c("bio_11", "bio_15", "bio_19")))
+
+##procedimento de modelagem no biomod2
+#formatar dados
+SenRiz_data <- BIOMOD_FormatingData(resp.var = rep(1, nrow( SenRiz_occ ) ),
+                                    expl.var = bioclim_SA_sub,
+                                    resp.xy = SenRiz_occ[,c('decimalLongitude', 'decimalLatitude')],
+                                    resp.name = "Senna.rizzinii",
+                                    PA.nb.rep = 3,
+                                    PA.nb.absences = 500,
+                                    PA.strategy = 'random')
+
+SenRiz_data #sumário do objeto formatado
+
+#plotar selecao de pseudo-ausencias
+plot(SenRiz_data)
+
+#ajustando algoritmos
+SenRiz_opt <- BIOMOD_ModelingOptions(GLM = list( type = 'quadratic',
+                                                 interaction.level = 1 ),
+                                     GBM = list( n.trees = 1000 ),
+                                     GAM = list( algo = 'GAM_mgcv' ) )
+
+#rodar modelos
+SenRiz_models <- BIOMOD_Modeling( data = SenRiz_data,
+                                  models = c("GLM", "GBM", "RF", "GAM"),
+                                  models.options = SenRiz_opt,
+                                  NbRunEval = 4,
+                                  DataSplit = 80,
+                                  VarImport = 3,
+                                  do.full.models = F,
+                                  modeling.id = "ex2" )
+
+##avaliar modelos
+SenRiz_models_scores <- get_evaluations(SenRiz_models)
+
+models_scores_graph(SenRiz_models, by = "models" , metrics = c("ROC","TSS"), 
+                    xlim = c(0.5,1), ylim = c(0.5,1))
+
+##avaliar modelos (consenso)
+SenRiz_ensemble_models <- BIOMOD_EnsembleModeling( modeling.output = SenRiz_models,
+                                                   em.by = 'all',
+                                                   eval.metric = 'TSS',
+                                                   eval.metric.quality.threshold = 0.8,
+                                                   models.eval.meth = c('KAPPA','TSS','ROC'),
+                                                   prob.mean = FALSE,
+                                                   prob.cv = TRUE, 
+                                                   committee.averaging = TRUE,
+                                                   prob.mean.weight = TRUE,
+                                                   VarImport = 0 )
+
+(SenRiz_ensemble_models_scores <- get_evaluations(SenRiz_ensemble_models))
+
+##projecoes e consenso (presente)
+SenRiz_models_proj_current <- BIOMOD_Projection( modeling.output = SenRiz_models,
+                                                 new.env = bioclim_SA_sub,
+                                                 proj.name = "current",
+                                                 binary.meth = "TSS",
+                                                 output.format = ".img",
+                                                 do.stack = FALSE )
+
+#consenso
+SenRiz_ensemble_models_proj_current <- 
+  BIOMOD_EnsembleForecasting( EM.output = SenRiz_ensemble_models,
+                              projection.output = SenRiz_models_proj_current,
+                              binary.meth = "TSS",
+                              output.format = ".img",
+                              do.stack = FALSE )
+
+##projecoes e consenso (2050)
+#carregar variaveis
+bioclim_world_2050_BC45 <- 
+  stack( c( bio_11 = "WorldClim_data/2050/BC_45/bc45bi5011.tif",
+            bio_15 = "WorldClim_data/2050/BC_45/bc45bi5015.tif",
+            bio_19 = "WorldClim_data/2050/BC_45/bc45bi5019.tif") )
+
+#recortar variaveis
+bioclim_SA_2050_BC45 <- crop( bioclim_world_2050_BC45, mask_south_america)
+bioclim_SA_2050_BC45 <- mask( bioclim_SA_2050_BC45, mask_south_america)
+bioclim_SA_2050_BC45 <- stack( bioclim_SA_2050_BC45 )
+
+#projecao
+SenRiz_models_proj_2050_BC45 <- BIOMOD_Projection( modeling.output = SenRiz_models,
+                                                   new.env = bioclim_SA_2050_BC45,
+                                                   proj.name = "2050_BC45",
+                                                   binary.meth = "TSS",
+                                                   output.format = ".img",
+                                                   do.stack = FALSE )
+
+#consenso
+SenRiz_ensemble_models_proj_2050_BC45 <- 
+  BIOMOD_EnsembleForecasting( EM.output = SenRiz_ensemble_models,
+                              projection.output = SenRiz_models_proj_2050_BC45,
+                              binary.meth = "TSS",
+                              output.format = ".img",
+                              do.stack = FALSE )
+
+
+##projecoes e consenso (2070)
+#carregar variáveis
+bioclim_world_2070_BC45 <- 
+  stack( c( bio_11 = "WorldClim_data/2070/BC_45/bc45bi7011.tif",
+            bio_15 = "WorldClim_data/2070/BC_45/bc45bi7015.tif",
+            bio_19 = "WorldClim_data/2070/BC_45/bc45bi7019.tif") )
+
+#recortar variaveis
+bioclim_SA_2070_BC45 <- crop( bioclim_world_2070_BC45, mask_south_america)
+bioclim_SA_2070_BC45 <- mask( bioclim_SA_2070_BC45, mask_south_america)
+bioclim_SA_2070_BC45 <- stack( bioclim_SA_2070_BC45 )
+
+#projecao
+SenRiz_models_proj_2070_BC45 <- BIOMOD_Projection( modeling.output = SenRiz_models,
+                                                   new.env = bioclim_SA_2070_BC45,
+                                                   proj.name = "2070_BC45",
+                                                   binary.meth = "TSS",
+                                                   output.format = ".img",
+                                                   do.stack = FALSE )
+
+#consenso
+SenRiz_ensemble_models_proj_2070_BC45 <- 
+  BIOMOD_EnsembleForecasting( EM.output = SenRiz_ensemble_models,
+                              projection.output = SenRiz_models_proj_2070_BC45,
+                              binary.meth = "TSS",
+                              output.format = ".img",
+                              do.stack = FALSE )
+
+##plotar projecoes (2070)
+proj_tmp <- get_predictions(SenRiz_ensemble_models_proj_2070_BC45)
+
+proj_tmp <- mask( proj_tmp, mask_south_america)
+
+names(proj_tmp)
+
+names(proj_tmp) <- c("cv", "ca", "wm")
+
+plot(proj_tmp)
+
+##calcular variacao na amplitude
+#carregar projecoes
+SenRiz_bin_proj_current <- stack( 
+  c( ca = "Senna.rizzinii/proj_current/individual_projections/Senna.rizzinii_EMcaByTSS_mergedAlgo_mergedRun_mergedData_TSSbin.img",
+     wm = "Senna.rizzinii/proj_current/individual_projections/Senna.rizzinii_EMwmeanByTSS_mergedAlgo_mergedRun_mergedData_TSSbin.img") )
+
+SenRiz_bin_proj_2050_BC45 <- stack( 
+  c( ca = "Senna.rizzinii/proj_2050_BC45/individual_projections/Senna.rizzinii_EMcaByTSS_mergedAlgo_mergedRun_mergedData_TSSbin.img",
+     wm = "Senna.rizzinii/proj_2050_BC45/individual_projections/Senna.rizzinii_EMwmeanByTSS_mergedAlgo_mergedRun_mergedData_TSSbin.img") )
+
+SenRiz_bin_proj_2070_BC45 <- stack( 
+  c( ca = "Senna.rizzinii/proj_2070_BC45/individual_projections/Senna.rizzinii_EMcaByTSS_mergedAlgo_mergedRun_mergedData_TSSbin.img",
+     wm = "Senna.rizzinii/proj_2070_BC45/individual_projections/Senna.rizzinii_EMwmeanByTSS_mergedAlgo_mergedRun_mergedData_TSSbin.img") )
+
+#recortar
+SenRiz_bin_proj_current <- mask( SenRiz_bin_proj_current, mask_south_america)
+SenRiz_bin_proj_current <- stack( SenRiz_bin_proj_current )
+
+SenRiz_bin_proj_2050_BC45 <- mask( SenRiz_bin_proj_2050_BC45, mask_south_america)
+SenRiz_bin_proj_2050_BC45 <- stack( SenRiz_bin_proj_2050_BC45 )
+
+SenRiz_bin_proj_2070_BC45 <- mask( SenRiz_bin_proj_2070_BC45, mask_south_america)
+SenRiz_bin_proj_2070_BC45 <- stack( SenRiz_bin_proj_2070_BC45 )
+
+#2050
+SRC_current_2050_BC45 <- BIOMOD_RangeSize( SenRiz_bin_proj_current,
+                                           SenRiz_bin_proj_2050_BC45 )
+
+SRC_current_2050_BC45$Compt.By.Models
+
+#2070
+SRC_current_2070_BC45 <- BIOMOD_RangeSize( SenRiz_bin_proj_current,
+                                           SenRiz_bin_proj_2070_BC45 )
+
+SRC_current_2070_BC45$Compt.By.Models
+
+##plotar variacao na amplitude
+SenRiz_src_map <- stack(SRC_current_2050_BC45$Diff.By.Pixel, SRC_current_2070_BC45$Diff.By.Pixel)
+
+names(SenRiz_src_map) <- c("ca cur-2050", "wm cur-2050", "ca cur-2070", "wm cur-2070")
+
+#recortar por area ambiental
+SenRiz_src_map <- mask(SenRiz_src_map, mask_south_america)
+
+#ajustar atributos dos mapas
+my.at <- seq(-2.5,1.5,1)
+myColorkey <- list(at=my.at, #cores
+                   labels=list(
+                     labels=c("lost", "pres", "abs","gain"), #titulos
+                     at=my.at[-1]-0.5 #posicao dos titulos
+                   ))
+
+#plotar
+rasterVis::levelplot( SenRiz_src_map, 
+                      main = "Senna rizzinii range change",
+                      colorkey = myColorkey,
+                      layout = c(2,2) )
