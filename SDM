@@ -117,7 +117,7 @@ bioclim_SA <- crop(bioclim_SA, mask_south_america)
 ##avaliar o espaco climatico de Senna rizzinii
 #extrair (das camadas climaticas) a identidade das celulas com ocorrencias
 SenRiz_cell_id <- cellFromXY(subset(bioclim_SA,1), 
-                             SenRiz_occ[,c("decimalLongitude", "decimalLatitude")])
+                             as.matrix(SenRiz_occ[,c("decimalLongitude", "decimalLatitude")]))
 
 #omitir (das camadas climaticas) celulas com dados climaticos indisponiveis
 bioclim_SA_df <- na.omit(as.data.frame(bioclim_SA))
