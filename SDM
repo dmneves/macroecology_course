@@ -232,9 +232,9 @@ SenRiz_ensemble_models_proj_current <-
 ##projecoes e consenso (2050)
 #carregar variaveis
 bioclim_world_2050_BC45 <- 
-  stack( c( bio_11 = "WorldClim_data/2050/BC_45/bc45bi5011.tif",
-            bio_15 = "WorldClim_data/2050/BC_45/bc45bi5015.tif",
-            bio_19 = "WorldClim_data/2050/BC_45/bc45bi5019.tif") )
+  stack( c( bio_2 = "WorldClim_data/2050/BC_45/bc45bi502.tif",
+            bio_11 = "WorldClim_data/2050/BC_45/bc45bi5011.tif",
+            bio_17 = "WorldClim_data/2050/BC_45/bc45bi5017.tif") )
 
 #recortar variaveis
 bioclim_SA_2050_BC45 <- crop( bioclim_world_2050_BC45, mask_south_america)
@@ -261,9 +261,9 @@ SenRiz_ensemble_models_proj_2050_BC45 <-
 ##projecoes e consenso (2070)
 #carregar variáveis
 bioclim_world_2070_BC45 <- 
-  stack( c( bio_11 = "WorldClim_data/2070/BC_45/bc45bi7011.tif",
-            bio_15 = "WorldClim_data/2070/BC_45/bc45bi7015.tif",
-            bio_19 = "WorldClim_data/2070/BC_45/bc45bi7019.tif") )
+  stack( c( bio_2 = "WorldClim_data/2070/BC_45/bc45bi702.tif",
+            bio_11 = "WorldClim_data/2070/BC_45/bc45bi7011.tif",
+            bio_17 = "WorldClim_data/2070/BC_45/bc45bi7017.tif") )
 
 #recortar variaveis
 bioclim_SA_2070_BC45 <- crop( bioclim_world_2070_BC45, mask_south_america)
