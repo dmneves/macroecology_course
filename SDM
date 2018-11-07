@@ -157,10 +157,10 @@ s.class(pca_SA$li[,1:2],
 s.corcircle(pca_SA$co, clab = 1)
 
 ##escolher variaveis
-bioclim_SA_sub <- stack(subset(bioclim_SA, c("bio_11", "bio_15", "bio_17")))
+bioclim_SA_sub <- stack(subset(bioclim_SA, c("bio_2", "bio_11", "bio_17")))
 
 #testar colinearidade
-cor(bioclim_SA_df[, c('bio_11', 'bio_15', 'bio_17')])
+cor(bioclim_SA_df[, c('bio_2', 'bio_11', 'bio_17')])
 
 ##procedimento de modelagem no biomod2
 #formatar dados
