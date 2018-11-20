@@ -2,8 +2,8 @@
 
 ##in R
 #using function in {taxize} to get taxonomy for each taxon from ncbi
-install.packages('geiger')
-require(geiger)
+install.packages('taxize')
+require(taxize)
 
 spp <- read.table(file.choose(), header = F)
 taxonomy_spp <- plantminer(spp)
