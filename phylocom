@@ -34,7 +34,7 @@ tree <- read.tree('tree.tre')
 is.ultrametric(tree)
 is.rooted(tree)
 
-#plotting
+#plotting (download figtree for better visualization)
 plot(tree, type = 'f', show.tip.label = F)
 
 #matching objects
