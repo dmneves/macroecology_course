@@ -10,3 +10,13 @@ taxonomy_spp <- as.data.frame(gbresolve(spp$V1))
 write.table(taxonomy_spp, 'taxonomy_spp.csv')#parse matrix outside R (much easier)
 
 ##in phylomatic
+#execute phylocom.bat (make sure files "R20160415.new" and "ages" are in working directory)
+#reconstruct the phylogenetic hypothesis
+#(make sure names in "spp_phylocom.txt" are formatted as "achatocarpaceae/achatocarpus/Achatocarpus_praecox","...",...)
+phylomatic -f R20160415.new -t spp.txt > phy
+
+#clean phylogeny
+phylocom cleanphy -f phy -e > clean
+
+#generate tree
+phylocom bladj -f clean > tree
