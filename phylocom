@@ -45,3 +45,4 @@ spp <- tmp$comm
 #calculate phylogenetic diversity
 spp.pd <- ses.pd(spp, tree, null.model="taxa.labels", runs=999)
 
+#test for correlations with climatic variable (if time allows..)
