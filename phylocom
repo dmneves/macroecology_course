@@ -1,0 +1,6 @@
+#using function in geiger to get taxonomy for each taxon from ncbi
+install.packages('geiger')
+require(geiger)
+
+spp <- read.table(file.choose(), header = F)
+taxonomy_genus <- as.data.frame(gbresolve(spp$V1))
