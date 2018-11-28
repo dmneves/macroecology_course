@@ -34,7 +34,7 @@ is.ultrametric(tree)
 is.rooted(tree)
 
 #make tree ultrametric (quick and easy approach)
-tree <- force.ultrametric(tree, model = 'extend')
+tree <- force.ultrametric(tree, method = 'extend')
 
 #plotting (download figtree for better visualization)
 plot(tree, type = 'f', show.tip.label = F)
