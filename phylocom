@@ -44,8 +44,5 @@ tmp <- match.phylo.comm(tree, spp)
 tree <- tmp$phy
 spp <- tmp$comm
 
-#reroot tree
-tree <- root(tree, 'Hedyosmum_brasiliense', r = T)
-
 #calculate phylogenetic diversity
 spp.pd <- ses.pd(spp, tree, null.model="taxa.labels", runs=999)
