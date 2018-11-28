@@ -16,7 +16,7 @@ write.table(taxonomy_spp, 'taxonomy_spp.csv')#parse matrix outside R (much easie
 phylomatic -f R20160415.new -t spp_phylocom.txt > phy
 
 #generate tree
-phylocom bladj -f phy > tree
+phylocom bladj -f phy > tree.tre
 
 ##back to R! paste phylocom tree in R's working directory
 #install and load packages
