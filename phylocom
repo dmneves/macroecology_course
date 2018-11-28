@@ -21,7 +21,9 @@ phylocom bladj -f phy > tree.tre
 ##back to R! paste phylocom tree in R's working directory
 #install and load packages
 install.packages('picante')
+install.packages('phytools')
 require(picante)
+require(phytools)
 
 #load spp-by-site amatrix (used in varpart analyses)
 spp <- read.table(file.choose(), header = T, row.names = 1, sep = ',')
@@ -30,6 +32,9 @@ spp <- read.table(file.choose(), header = T, row.names = 1, sep = ',')
 tree <- read.tree('tree.tre')
 is.ultrametric(tree)
 is.rooted(tree)
+
+#make tree ultrametric (quick and easy approach)
+tree <- force.ultrametric(tree, model = 'extend')
 
 #plotting (download figtree for better visualization)
 plot(tree, type = 'f', show.tip.label = F)
