@@ -38,21 +38,47 @@ plot(fit, add = T, col = 'black')
 ##map
 #ll  <- read.table('latlong.txt', header = T, row.names = 1, sep = '')
 
-#load Brazil's shapefile
-#brasil <- shapefile('Brasil')
+#load Serra do Espinhaço shapefile
+espinhaco <- shapefile('rbse')
 
 #plot geographical delimitation
 map(xlim = c(min(ll$Long10), max(ll$Long10)),
 	ylim = c(min(ll$Lat10), max(ll$Lat10)), col = "white")
 
 #plot shapefile and points
-plot(brasil, border = 'gray', add = T)
+plot(espinhaco, add = T)
 points(ll$Long10, ll$Lat10, col = rgb(col$r, col$g, col$b,
 	maxColorValue = 255), pch = 16)
 #map.axes()
 
 #fit most explanatory environmental variable
-ordisurf(cbind(ll$Long10, ll$Lat10), environment$bio9, col = 'black', add = T)
+ordisurf(cbind(ll$Long10, ll$Lat10), environment$bio1, col = 'gray', add = T)
+
+dev.off()
+
+
+##vegetation types
+tiff("nmds_map2.tiff", height = 15, width = 30, unit = "cm", res = 600)
+par(mfrow = c(1, 2))
+plot(spp.ord, col = c('red', 'blue', 'green', 'lightblue', 'yellow', 'orange')[as.numeric(md$Main.Vegetation.Type)], pch = 16)
+
+#fit environmental vectors
+fit <- envfit(spp.ord, environment)
+plot(fit, add = T, col = 'black')
+
+##map
+#plot geographical delimitation
+map(xlim = c(min(ll$Long10), max(ll$Long10)),
+	ylim = c(min(ll$Lat10), max(ll$Lat10)), col = "white")
+
+#plot shapefile and points
+plot(espinhaco, add = T)
+points(ll$Long10, ll$Lat10, col = c('red', 'blue', 'green', 'lightblue', 'yellow',
+	'orange')[as.numeric(md$Main.Vegetation.Type)], pch = 16)
+map.axes()
+
+#fit most explanatory environmental variable
+ordisurf(cbind(ll$Long10, ll$Lat10), environment$bio1, col = 'gray', add = T)
 
 dev.off()
 
