@@ -62,6 +62,9 @@ tiff("nmds_map2.tiff", height = 15, width = 30, unit = "cm", res = 600)
 par(mfrow = c(1, 2))
 plot(spp.ord, col = c('red', 'blue', 'green', 'lightblue', 'yellow', 'orange')[as.numeric(md$Main.Vegetation.Type)], pch = 16)
 
+legend('topright', c('cerrado', 'mata nebular', 'mata riparia', 'mata rupicola', 'mata seca', 'mata semidecidua'),
+          pch = 16, col = c('red', 'blue', 'green', 'lightblue', 'yellow', 'orange'), bty = 'n')
+
 #fit environmental vectors
 fit <- envfit(spp.ord, environment)
 plot(fit, add = T, col = 'black')
