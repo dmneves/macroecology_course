@@ -7,7 +7,7 @@ require(raster)
 require(maps)
 
 #load species-by-site matrix
-spp  <- read.table('spp.txt', header = T, row.names = 1, sep = '')
+spp  <- read.table(file.choose(), header = T, row.names = 1, sep = '')
 
 #exclude unicates
 uni <- apply(spp, 2, sum)
@@ -21,67 +21,93 @@ simdiss <- recluster.dist(spp.hel, dist = "simpson")
 
 #ordination analysis
 spp.ord <- metaMDS(simdiss, center = T)$points
-col <- as.data.frame(recluster.col(spp.ord))
 
-#extract colors for plots
-colnames(col) <- c('axis1', 'axis2', 'r', 'g', 'b')
+##load objects and plot ordination results
+#latlongs
+#ll  <- read.table(file.choose(), header = T, row.names = 1, sep = '')
 
-##plot ordination results
-tiff("nmds_map.tiff", height = 15, width = 30, unit = "cm", res = 600)
-par(mfrow = c(1, 2))
-plot(spp.ord, col = rgb(col$r, col$g, col$b, maxColorValue = 255), pch = 16)
+#metadata
+md <- read.table(file.choose(), header = T, row.names = 1, sep = ',')
 
-#fit environmental vectors
-fit <- envfit(spp.ord, environment)
-plot(fit, add = T, col = 'black')
+#load shapefiles
+espinhaco <- shapefile('rbse')#Reserva da Biosfera Serra do Espinhaço
 
-##map
-#ll  <- read.table('latlong.txt', header = T, row.names = 1, sep = '')
+mg <- shapefile('minas')
 
-#load Serra do Espinhaço shapefile
-espinhaco <- shapefile('rbse')
+#plot ordination
+plot(spp.ord, col = c('red', 'blue', 'green', 'lightblue', 'yellow', 'orange')[as.numeric(md$Main.vegetation.type)], pch = 16)
 
-#plot geographical delimitation
-map(xlim = c(min(ll$Long10), max(ll$Long10)),
-	ylim = c(min(ll$Lat10), max(ll$Lat10)), col = "white")
-
-#plot shapefile and points
-plot(espinhaco, add = T)
-points(ll$Long10, ll$Lat10, col = rgb(col$r, col$g, col$b,
-	maxColorValue = 255), pch = 16)
-#map.axes()
-
-#fit most explanatory environmental variable
-ordisurf(cbind(ll$Long10, ll$Lat10), environment$bio1, col = 'gray', add = T)
-
-dev.off()
-
-
-##vegetation types
-tiff("nmds_map2.tiff", height = 15, width = 30, unit = "cm", res = 600)
-par(mfrow = c(1, 2))
-plot(spp.ord, col = c('red', 'blue', 'green', 'lightblue', 'yellow', 'orange')[as.numeric(md$Main.Vegetation.Type)], pch = 16)
-
-legend('topright', c('cerrado', 'mata nebular', 'mata riparia', 'mata rupicola', 'mata seca', 'mata semidecidua'),
+legend('bottomleft', c('cerrado', 'mata nebular', 'mata riparia', 'mata rupicola', 'mata seca', 'mata semidecidua'),
           pch = 16, col = c('red', 'blue', 'green', 'lightblue', 'yellow', 'orange'), bty = 'n')
 
 #fit environmental vectors
 fit <- envfit(spp.ord, environment)
 plot(fit, add = T, col = 'black')
 
-##map
-#plot geographical delimitation
-map(xlim = c(min(ll$Long10), max(ll$Long10)),
-	ylim = c(min(ll$Lat10), max(ll$Lat10)), col = "white")
+#exclude colinear variables
+colnames(environment)
+environment2 <- environment[, -c(4, 8, 9)]#HyperSeas, WaterExcSev, DaysFrost
 
-#plot shapefile and points
-plot(espinhaco, add = T)
-points(ll$Long10, ll$Lat10, col = c('red', 'blue', 'green', 'lightblue', 'yellow',
-	'orange')[as.numeric(md$Main.Vegetation.Type)], pch = 16)
+#new ordination plot
+plot(spp.ord, col = c('red', 'blue', 'green', 'lightblue', 'yellow', 'orange')[as.numeric(md$Main.vegetation.type)], pch = 16)
+
+legend('bottomleft', c('cerrado', 'mata nebular', 'mata riparia', 'mata rupicola', 'mata seca', 'mata semidecidua'),
+          pch = 16, col = c('red', 'blue', 'green', 'lightblue', 'yellow', 'orange'), bty = 'n')
+
+#fit environmental vectors
+fit <- envfit(spp.ord, environment2)
+plot(fit, add = T, col = 'black')
+
+
+##plot maps
+#plot Espinhaço location within Minas Gerais state
+plot(mg)
+plot(espinhaco, add = T, col = 'gray')
 map.axes()
 
-#fit most explanatory environmental variable
-ordisurf(cbind(ll$Long10, ll$Lat10), environment$bio1, col = 'gray', add = T)
+#plot Espinhaço and points
+plot(espinhaco)
+points(ll$Long10, ll$Lat10, col = c('red', 'blue', 'green', 'lightblue', 'yellow',
+	'orange')[as.numeric(md$Main.vegetation.type)], pch = 16)
+map.axes()
+
+legend('bottomleft', c('cerrado', 'mata nebular', 'mata riparia', 'mata rupicola', 'mata seca', 'mata semidecidua'),
+          pch = 16, col = c('red', 'blue', 'green', 'lightblue', 'yellow', 'orange'), bty = 'n')
+
+
+#save to working directory
+tiff("nmds.tiff", height = 15, width = 15, unit = "cm", res = 600)
+
+##ordination
+plot(spp.ord, col = c('red', 'blue', 'green', 'lightblue', 'yellow', 'orange')[as.numeric(md$Main.vegetation.type)], pch = 16)
+
+legend('bottomleft', c('cerrado', 'mata nebular', 'mata riparia', 'mata rupicola', 'mata seca', 'mata semidecidua'),
+          pch = 16, col = c('red', 'blue', 'green', 'lightblue', 'yellow', 'orange'), bty = 'n')
+
+#fit environmental vectors
+fit <- envfit(spp.ord, environment2)
+plot(fit, add = T, col = 'black')
+
+dev.off()
+
+
+##map
+tiff("maps.tiff", height = 15, width = 30, unit = "cm", res = 600)
+par(mfrow = c(1, 2))
+
+#plot Espinhaço location within Minas Gerais state
+plot(mg)
+plot(espinhaco, add = T, col = 'gray')
+map.axes()
+
+#plot Espinhaço and points
+plot(espinhaco)
+points(ll$Long10, ll$Lat10, col = c('red', 'blue', 'green', 'lightblue', 'yellow',
+	'orange')[as.numeric(md$Main.vegetation.type)], pch = 16)
+map.axes()
+
+legend('bottomleft', c('cerrado', 'mata nebular', 'mata riparia', 'mata rupicola', 'mata seca', 'mata semidecidua'),
+          pch = 16, col = c('red', 'blue', 'green', 'lightblue', 'yellow', 'orange'), bty = 'n')
 
 dev.off()
 
