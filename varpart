@@ -27,6 +27,9 @@ spp.hel <- decostand(spp, 'hel')
 
 ##forward selection - environmental variables
 #env = environmental variables-by-site matrix
+env <- read.table(file.choose(), header = T,
+	row.names = 1, sep = ',')#new environmental matrix
+
 env.mod0 <- rda(spp.hel ~ 1, as.data.frame(env))
 env.mod1 <- rda(spp.hel ~ ., as.data.frame(env))
 env.sel <- ordiR2step(env.mod0, scope = formula(env.mod1),
