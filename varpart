@@ -36,7 +36,14 @@ env.labels <- attr(env.sel$terms, "term.labels")
 environment <- env[, match(env.labels, colnames(env))]
 
 ##progressive elimination of collinear variables based on VIF
-##maintaining only those with VIF < 4
+##maintaining only those with VIF < 5
+vif.cca(rda(spp.hel, environment))
+
+colnames(environment)
+environment <- environment[, -16]#TempAnn
+
+vif.cca(rda(spp.hel, environment))
+environment <- environment[, -c(3, 11, 15)]#TempMin, WaterDefDur, TempMax
 vif.cca(rda(spp.hel, environment))
 
 ##generate PCNMs
