@@ -47,14 +47,15 @@ data <- data[-ids,]
 # shapefile in the working directory)
 sa <- shapefile("South_America")
 
-plot(data[, 3:4])
+plot(sa)
+points(data[, 3:4], pch = 16, cex = 0.1, col = 'red')
 
 ids <- which(data$decimalLongitude < -80 | data$decimalLongitude > -20)
 
 data <- data[-ids,]
 
-plot(data[, 3:4])
-plot(sa, add = T)
+plot(sa)
+points(data[, 3:4], pch = 16, cex = 0.1, col = 'red')
 
 ## install and load libraries
 if(!require(biomod2)){ ## automatically install biomod2 package if needed
