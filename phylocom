@@ -6,7 +6,7 @@ install.packages('taxize')
 require(taxize)
 
 spp <- read.table(file.choose(), header = F)
-taxonomy_spp <- plantminer(spp[,1])
+taxonomy_spp <- plantminer(spp[,1], from = 'flora')
 write.table(taxonomy_spp, 'taxonomy_spp.csv')#parse matrix outside R (much easier)
 
 ##in phylomatic
