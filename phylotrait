@@ -1,11 +1,20 @@
 #load packages
 require(diversitree)
+require(picante)
 
 #load sppXbiome matrix
-habitats <- read.table('habitats.csv', header = T, row.names = 1, sep = ',')
+habitats <- read.table(file.choose(), header = T, row.names = 1, sep = ',')
 
 #load phylogeny
 tree <- read.tree('tree.tre')
+
+#match objects
+tmp <- match.phylo.data(tree, habitats)
+
+habitats <- tmp$data
+
+#collapse single nodes for better plotting
+tree <- collapse.singles(tree)
 
 #plot
 pdf('phylotrait_plot.pdf', height = 15, width = 15)
@@ -21,6 +30,7 @@ trait.plot(tree, as.data.frame(habitats), tip.color = 'white',
 
 legend('topright', legend = c('cerrado', 'mata nebular', 'mata riparia',
 	'mata rupicola', 'mata seca', 'mata semidecidua'), pch = 15,
-	col = c('red', 'blue', 'green', 'lightblue', 'yellow', 'orange'), bty = 'n')
+	col = c('red', 'blue', 'green', 'lightblue', 'yellow', 'orange'),
+	bty = 'n', cex = 2)
 
 dev.off()
