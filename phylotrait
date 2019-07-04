@@ -2,7 +2,7 @@
 require(diversitree)
 
 #load sppXbiome matrix
-biomes <- read.table('biomes.csv', header = T, row.names = 1, sep = ',')
+habitats <- read.table('habitats.csv', header = T, row.names = 1, sep = ',')
 
 #load phylogeny
 tree <- read.tree('tree.tre')
@@ -10,16 +10,17 @@ tree <- read.tree('tree.tre')
 #plot
 pdf('phylotrait_plot.pdf', height = 15, width = 15)
 
-trait.plot(tree, as.data.frame(biomes), tip.color = 'white',
-	cols = list(amazon = c('white', "darkgreen"),
-	atlantic = c("white", "green"),
-	caatinga = c("white", "yellow"),
-	cerrado = c("white", "orange"),
-	inselberg = c("white", "red")), cex.lab = 0.4,
+trait.plot(tree, as.data.frame(habitats), tip.color = 'white',
+	cols = list(cerrado = c('white', "red"),
+	mata_nebular = c("white", "blue"),
+	mata_riparia = c("white", "green"),
+	mata_rupicola = c("white", "lightblue"),
+	mata_seca = c("white", "yellow"),
+	mata_semidecidua = c("white", "orange")), cex.lab = 0.4,
 	legend = F, edge.color = 'gray')
 
-legend('topright', legend = c('Amazon', 'Atlantic Forest', 'Caatinga',
-	'Cerrado', 'inselbergs'), pch = 15,
-	col = c('darkgreen', 'green', 'yellow', 'orange', 'red'), bty = 'n')
+legend('topright', legend = c('cerrado', 'mata nebular', 'mata riparia',
+	'mata rupicola', 'mata seca', 'mata semidecidua'), pch = 15,
+	col = c('red', 'blue', 'green', 'lightblue', 'yellow', 'orange'), bty = 'n')
 
 dev.off()
