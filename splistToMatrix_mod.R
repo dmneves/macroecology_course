@@ -1,10 +1,10 @@
 splistToMatrix = function(d,sp,r)
   {
   out = matrix(0,nrow = ncell(r),ncol = length(sp))
-  d2 = d[which(d$Species %in% sp),]
+  d2 = d[which(d$name %in% sp),]
   
-  rowind = cellFromXY(r,cbind(d2$X,d2$Y))
-  colind = match(d2$Species,sp)
+  rowind = cellFromXY(r,cbind(d2$longitude,d2$latitude))
+  colind = match(d2$name,sp)
   out[cbind(rowind,colind)] = 1
 
   out[,which(apply(out,2,sum)==0)] = NA
